@@ -121,12 +121,12 @@ class VoxelHair():
 
     def saveOcc(self, occMat = "Occ3D.mat"):
         result = {}
-        result["Occ"] = self.occ
+        result["Occ"] = np.flip(self.occ, axis=[1, 2]).transpose(1, 0, 2)
         scio.savemat(occMat, result)
 
     def saveOri(self, oriMat = "Ori_gt.mat"):
         result = {}
-        result["Ori"] = self.ori.transpose(0, 1, 3, 2).reshape(self.size[0], self.size[1], self.size[2] * 3)
+        result["Ori"] = np.flip(self.ori, axis=[1, 2]).transpose(1, 0, 3, 2).reshape(self.size[0], self.size[1], self.size[2] * 3)
         scio.savemat(oriMat, result)
 
     def saveMask(self, maskFile = "mask.png"):
