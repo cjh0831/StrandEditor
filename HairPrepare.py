@@ -142,3 +142,6 @@ if __name__ == "__main__":
     # hairVoxel.saveOcc("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Occ3D.mat")
     # hairVoxel.saveOri("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Ori3D.mat")
 
+    hair.saveOcc()
+    hair.saveOri()
+
