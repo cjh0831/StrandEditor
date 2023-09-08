@@ -3,6 +3,7 @@ import struct
 import numpy as np
 import scipy.io as scio
 from GenVoxelGrid import Voxel
+from Hair import Hair
 
 class VoxelHair():
     def __init__(self, gridSize = 128, dbBustObj = "DB_Bust.obj"):
@@ -27,25 +28,10 @@ class VoxelHair():
             index += vert
         self.dire = self.dire / np.repeat(np.linalg.norm(self.dire, axis=1), 3).reshape(-1, 3)
 
-    def loadHair(self, hairFile):
-        self.verts = []
-        self.points = []
-        with open(hairFile, "rb") as file:
-            file.read(4)
-            hair_count = struct.unpack('i', file.read(4))[0]
-            point_count = struct.unpack('i', file.read(4))[0]
-            arrays = struct.unpack('i', file.read(4))[0]
-            d_segments = struct.unpack('i', file.read(4))[0]
-            d_thickness = struct.unpack('f', file.read(4))[0]
-            d_transparency = struct.unpack('f', file.read(4))[0]
-            d_color = struct.unpack('fff', file.read(4 * 3))
-            file.read(88)
-
-            segments = struct.unpack('h' * hair_count, file.read(2 * hair_count))
-            self.verts = np.array(segments) + 1
-            
-            points = struct.unpack('f' * point_count * 3, file.read(4 * point_count * 3))
-            self.points = np.array(points).reshape(-1, 3)
+    def loadHair(self, hair):
+        assert isinstance(hair, Hair)
+        self.verts = hair.getNumVerts()
+        self.points = hair.getPoints()
         self.genDire()
 
     def genOcc(self, delta = 10):
@@ -85,7 +71,7 @@ class VoxelHair():
         # for i in range(voxel_result.shape[0]):
         #     oriMean[voxel_result[i, 0], voxel_result[i, 1], voxel_result[i, 2], :] += delete_dire[i, :]
         #     poolSize[voxel_result[i, 0], voxel_result[i, 1], voxel_result[i, 2]] += 1
-        
+
         oriMean = oriMean / np.clip(np.repeat(poolSize[..., np.newaxis], 3, axis=-1), 1., np.inf)
         has_size = np.where(poolSize > 0)
         oriMean[has_size] = oriMean[has_size] / np.repeat(np.linalg.norm(oriMean[has_size], axis=-1)[..., np.newaxis], 3, axis=-1)
@@ -121,12 +107,12 @@ class VoxelHair():
 
     def saveOcc(self, occMat = "Occ3D.mat"):
         result = {}
-        result["Occ"] = self.occ
+        result["Occ"] = np.flip(self.occ, axis=[1, 2]).transpose(1, 0, 2)
         scio.savemat(occMat, result)
 
     def saveOri(self, oriMat = "Ori_gt.mat"):
         result = {}
-        result["Ori"] = self.ori.transpose(0, 1, 3, 2).reshape(self.size[0], self.size[1], self.size[2] * 3)
+        result["Ori"] = np.flip(self.ori, axis=[1, 2]).transpose(1, 0, 3, 2).reshape(self.size[0], self.size[1], self.size[2] * 3)
         scio.savemat(oriMat, result)
 
     def saveMask(self, maskFile = "mask.png"):
@@ -136,26 +122,23 @@ class VoxelHair():
 if __name__ == "__main__":
     import time
     start = time.time()
-    hair = VoxelHair()
+    hair = Hair()
+    hairVoxel = VoxelHair(gridSize = 512)
     end = time.time()
     print("inti: ", end - start)
     start = end
 
-    hair.loadHair("DB1_hair.hair")
-    end = time.time()
-    print("load hair: ", end - start)
-    start = end
+    hair.loadAbcHair("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Male_Hair_016_usc.abc")
+    hairVoxel.loadHair(hair)
+    hairVoxel.genOcc()
+    hairVoxel.genOri()
+    hairVoxel.saveOcc("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Occ3D_pred.mat")
+    hairVoxel.saveOri("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Ori3D_pred.mat")
 
-    hair.genOcc()
-    end = time.time()
-    print("gen occ: ", end - start)
-    start = end
+    # hair.loadHairHair("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Male_Hair_016_usc.hair")
+    # hairVoxel.loadHair(hair)
+    # hairVoxel.genOcc()
+    # hairVoxel.genOri()
+    # hairVoxel.saveOcc("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Occ3D.mat")
+    # hairVoxel.saveOri("/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/test/Ori3D.mat")
 
-    hair.genOri()
-    end = time.time()
-    print("gen ori: ", end - start)
-    start = end
-
-    hair.saveOcc()
-    hair.saveOri()
-    hair.saveMask()

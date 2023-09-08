@@ -2,15 +2,15 @@ import scipy.io as scio
 import numpy as np
 import matplotlib.pyplot as plt
 
-ori = scio.loadmat("Ori_gt.mat")["Ori"]
-occ = scio.loadmat("Occ3D.mat")["Occ"]
+ori = scio.loadmat("Ori3D_pred.mat")["Ori"]
+occ = scio.loadmat("Occ3D_pred.mat")["Occ"]
 
 print(ori.shape)
 x = []
 y = []
 z = []
 color = []
-depth = ori.shape[2] / 3
+depth = ori.shape[2] // 3
 for i in range(ori.shape[0]):
     for j in range(ori.shape[1]):
         for k in range(depth):

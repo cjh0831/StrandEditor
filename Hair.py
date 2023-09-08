@@ -64,7 +64,7 @@ class Hair():
             print("Has no alembic sdk")
             return False
 
-    def loadHAbcHair(self, abcFile):
+    def loadAbcHair(self, abcFile):
         if not self.hasAlembic():
             return
 
@@ -165,14 +165,34 @@ class Hair():
 
 
 if __name__ == "__main__":
+    import os
+    import random
+    input_dir = "/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/mh2usc_hair_big"
+    output_dir = "/mnt/e/YDNB/NeuralHDHair/mh2usc_hair/mh2usc_abc_big"
+    os.makedirs(output_dir, exist_ok=True)
     hair = Hair()
-    hair.loadHairHair("DB1_hair.hair")
-    print(hair.getPoints())
-    print(hair.getNumVerts())
+    for file in os.listdir(input_dir):
+        hair.loadHairHair(os.path.join(input_dir, file))
+        nVerts = hair.getNumVerts()
+        points = hair.getPoints()
 
-    hair.toAbcHair("hair.abc")
-    hair.loadHAbcHair("hair.abc")
+        index = 0
+        randVerts = np.random.rand(nVerts.shape[0])
 
-    print(hair.getPoints())
-    print(hair.getNumVerts())
-    hair.toHairHair("DB1_hair1.hair")
+        threshold = 60000 / nVerts.shape[0]
+        print(threshold)
+        newNVerts = nVerts[randVerts < threshold]
+        deleteIndex = []
+        for i, vert in enumerate(nVerts):
+            if randVerts[i] >= threshold:
+                deleteIndex.append(np.arange(vert) + index)
+            index += vert
+        if deleteIndex != []:
+            deleteIndex = np.concatenate(deleteIndex)
+            print(deleteIndex.shape)
+            print(points.shape)
+            points = np.delete(points, deleteIndex, axis=0)
+        print(points.shape)
+        hair.setNumVerts(newNVerts)
+        hair.setPoints(points)
+        hair.toAbcHair(os.path.join(output_dir, "{}.abc".format(file.split(".")[0])))
