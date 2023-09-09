@@ -9,7 +9,7 @@ class Voxel():
         self.oriOffSet = np.array([0., 0., 0.])
 
     def genVoxel(self, hair_obj):
-        def readObj(hari_obj):
+        def readObj(hair_obj):
             bbox = [np.inf, -np.inf, np.inf, -np.inf, np.inf, -np.inf]
             with open(hair_obj, "r") as file:
                 lines = file.readlines()
